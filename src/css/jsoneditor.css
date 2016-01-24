@@ -397,6 +397,12 @@ div.jsoneditor-tree .jsoneditor-schema-error {
   -ms-animation: fade-in .3s linear 1, move-up .3s linear 1;
 }
 
+/*Popovers on the root node show on the left due to bounding box checks.
+  A bit of top margin on the first element helps*/
+.jsoneditor-outer > .jsoneditor-tree > .jsoneditor-tree:first-child {
+  margin-top: 27px;
+}
+
 @-webkit-keyframes fade-in {
   from   { opacity: 0; }
   to { opacity: 1; }

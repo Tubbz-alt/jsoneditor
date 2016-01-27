@@ -1257,10 +1257,41 @@ Node.prototype._updateDomValue = function () {
         this.dom.tdCheckbox.appendChild(this.dom.checkbox);
 
         this.dom.tdValue.parentNode.insertBefore(this.dom.tdCheckbox, this.dom.tdValue);
+        this.dom.tdValue.hidden = true;
       }
 
       this.dom.checkbox.checked = this.value;
-    }
+    } else if (type === 'string' && this.editor.options.schema) {
+        try {
+          //console.log(this);
+          if (this.getField() == 'http.skin') {
+            //debugger;
+          }
+          var options = this.editor.options.schema.properties[this.getField()].enum;
+          var titles = options;
+          if (! options) {
+            options = this.editor.options.schema.definitions[this.getField()].enum;
+            titles =  this.editor.options.schema.definitions[this.getField()].enum_titles;
+          }
+          if (options && !this.dom.select) {
+            this.dom.select = document.createElement('select');
+            this.dom.tdSelect = document.createElement('td');
+            this.dom.tdSelect.className = 'jsoneditor-tree';
+            this.dom.tdSelect.appendChild(this.dom.select);
+            for (var i = 0; i < options.length; i++){
+              var option = document.createElement('option');
+              option.value = options[i];
+              option.text = titles[i];
+              this.dom.select.appendChild(option);
+            }
+
+            this.dom.tdValue.parentNode.insertBefore(this.dom.tdSelect, this.dom.tdValue);
+            this.dom.tdValue.hidden = true;
+          }
+        } catch (e) {};
+
+          //this.dom.checkbox.checked = this.value;
+        }
     else {
       // cleanup checkbox when displayed
       if (this.dom.tdCheckbox) {
@@ -1885,10 +1916,31 @@ Node.prototype.updateDom = function (options) {
     if (this.type == 'array') {
       domValue.innerHTML = '[' + count + ']';
       util.addClassName(this.dom.tr, 'jsoneditor-expandable');
+      if (! this.dom.addbtn) {
+        this.dom.addbtn = document.createElement('button');
+        this.dom.addbtn.type = 'button';
+        this.dom.addbtn.className = 'jsoneditor-add';
+        this.dom.tdAddbtn = document.createElement('td');
+        this.dom.tdAddbtn.className = 'jsoneditor-tree';
+        this.dom.tdAddbtn.appendChild(this.dom.addbtn);
+        domField.parentNode.appendChild(this.dom.tdAddbtn);
+      }
     }
     else if (this.type == 'object') {
       domValue.innerHTML = '{' + count + '}';
       util.addClassName(this.dom.tr, 'jsoneditor-expandable');
+      console.log(this);
+      if (count == 2 && ! this.dom.removebtn) {
+        domValue.innerHTML = '';
+        this.dom.removebtn = document.createElement('button');
+        this.dom.removebtn.type = 'button';
+        this.dom.removebtn.className = 'jsoneditor-remove';
+        this.dom.removebtn.index = this.index;
+        this.dom.tdRemovebtn = document.createElement('td');
+        this.dom.tdRemovebtn.className = 'jsoneditor-tree';
+        this.dom.tdRemovebtn.appendChild(this.dom.removebtn);
+        domField.parentNode.appendChild(this.dom.tdRemovebtn);
+      }
     }
     else {
       domValue.innerHTML = this._escapeHTML(this.value);
@@ -2108,13 +2160,28 @@ Node.prototype.onEvent = function (event) {
         var recurse = event.ctrlKey; // with ctrl-key, expand/collapse all
         this._onExpand(recurse);
       }
+    } else if (target == dom.addbtn) {
+      var json = JSON.parse(this.editor.getText());
+      json['smb.filelist'] = json['smb.filelist'].concat({'name':'', type:''});
+      this.editor.setText(JSON.stringify(json));
+      this.editor.validate();
+    } else if (target == dom.removebtn) {
+      var json = JSON.parse(this.editor.getText());
+      json['smb.filelist'].splice(dom.removebtn.index, 1);
+      this.editor.setText(JSON.stringify(json));
+      this.editor.validate();
     }
   }
 
   // swap the value of a boolean when the checkbox displayed left is clicked
-  if (type == 'change' && target == dom.checkbox) {
-    this.dom.value.innerHTML = !this.value;
-    this._getDomValue();
+  if (type == 'change') {
+    if (target == dom.checkbox) {
+      this.dom.value.innerHTML = !this.value;
+      this._getDomValue();
+    } else if (target == dom.select) {
+      dom.select.parentElement.parentElement.getElementsByClassName('jsoneditor-value')[0].textContent = this.dom.select.children[this.dom.select.selectedIndex].value;
+      this._getDomValue();
+    }
   }
 
   // value events

@@ -292,6 +292,7 @@ JSONEditor.prototype.setSchema = function (schema) {
 
       // validate now
       this.validate();
+      this.node.updateDom({'recurse': true});
     }
   }
   else {

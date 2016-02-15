@@ -1275,6 +1275,7 @@ Node.prototype._updateDomValue = function () {
           }
           if (options && !this.dom.select) {
             this.dom.select = document.createElement('select');
+            this.dom.select.editor = this.editor;
             this.dom.tdSelect = document.createElement('td');
             this.dom.tdSelect.className = 'jsoneditor-tree';
             this.dom.tdSelect.appendChild(this.dom.select);
